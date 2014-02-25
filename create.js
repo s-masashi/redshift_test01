@@ -1,20 +1,24 @@
 var cli = require("cli");
 
 cli.parse({
+	random_stream: ["rs", "random stream", "path", "/dev/urandom"],
+	csv: ["c", "csv file path", "path", "./testtable01.csv"],
 	number: ["n", "number of lines", "number", 10]
 });
 
 cli.main(function(args, options) {
 	var fs = require("fs");
 	var count = 0;
-	fs.open("/dev/urandom", "r", function(err, fd) {
-		var buffer = new Buffer(150);
-		while (count < options.number) {
-			fs.readSync(fd, buffer, 0, 150, null);
-			var s = buffer.toString('base64');
-			console.log(count + "," + s);
-			count++;
-		} // end of while
-	}); // end of fs.open
-});
+	var fdR = fs.openSync(options.random_stream, "r");
+	var fdW = fs.openSync(options.csv, "w");
+	var buffer = new Buffer(150);
+	while (count < options.number) {
+		fs.readSync(fdR, buffer, 0, 150, null);
+		var s = buffer.toString('base64');
+		var line = (count + "," + s + "\n");
+		var bufW = new Buffer(line);
+		fs.writeSync(fdW, bufW, 0, bufW.length, null);
+		count++;
+	} // end of while
+}); // end of cli.main
 
